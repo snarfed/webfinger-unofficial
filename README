@@ -1,0 +1,9 @@
+This is a stand-in, proxy webfinger server for sites that don't implement
+webfinger themselves. It's deployed at http://webfinger-unofficial.appspot.com/
+and currently supports Facebook and Twitter.
+
+Feel free to add implementations for more sites!
+
+Background on webfinger:
+http://code.google.com/p/webfinger/wiki/WebFingerProtocol
+http://hueniverse.com/2009/09/implementing-webfinger/

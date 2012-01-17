@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<XRD xmlns='http://docs.oasis-open.org/ns/xri/xrd-1.0'>
+ 
+    <Subject>{{ uri }}</Subject>
+    <Alias>{{ profile_url }}</Alias>
+ 
+    <!-- list of possible link relations:
+         http://code.google.com/p/webfinger/wiki/CommonLinkRelations
+    -->
+    <Link rel='http://webfinger.net/rel/profile-page' type='text/html'
+          href='{{ profile_url }}' />
+    <Link rel='describedby' type='text/html'
+          href='{{ profile_url }}' />
+
+    {% if picture_url %}
+    <Link rel='http://webfinger.net/rel/avatar'
+          href='{{ picture_url }}' />
+    {% endif %}
+
+    {% if openid_url %}
+    <Link rel='http://specs.openid.net/auth/2.0/provider'
+          href='{{ openid_url }}' />
+    {% endif %}
+</XRD>
