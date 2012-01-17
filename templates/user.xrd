@@ -4,9 +4,6 @@
     <Subject>{{ uri }}</Subject>
     <Alias>{{ profile_url }}</Alias>
  
-    <!-- list of possible link relations:
-         http://code.google.com/p/webfinger/wiki/CommonLinkRelations
-    -->
     <Link rel='http://webfinger.net/rel/profile-page' type='text/html'
           href='{{ profile_url }}' />
     <Link rel='describedby' type='text/html'

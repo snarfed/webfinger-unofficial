@@ -1,8 +1,11 @@
 This is a stand-in, proxy webfinger server for sites that don't implement
-webfinger themselves. It's deployed at http://webfinger-unofficial.appspot.com/
-and currently supports Facebook and Twitter.
+webfinger themselves. It currently has implementations for Facebook and Twitter,
+served at these endpoints:
 
-Feel free to add implementations for more sites!
+http://facebook-webfinger.appspot.com/
+http://twitter-webfinger.appspot.com/
+
+Feel free to add more!
 
 Background on webfinger:
 http://code.google.com/p/webfinger/wiki/WebFingerProtocol

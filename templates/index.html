@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>WebFinger for {{ domain }}</title>
+</head>
+
+<body>
+<h1>WebFinger for {{ domain }}</h1>
+<p>This is an unofficial
+  <a href="http://code.google.com/p/webfinger/">WebFinger</a> server
+  for <a href="http://{{ domain }}/">{{ domain }}</a>. It serves these endpoints:</p>
+<ul>
+  <li><code>https://{{ host }}/.well-known/host-meta</code></li>
+  <li><code>https://{{ host }}/user?uri={uri}</code></li>
+</ul>
+<p>The user URI is <code>acct:<i>username</i>@{{ domain }}</code>,
+  where <i>username</i> is a username or user id. See the
+  <a href="http://code.google.com/p/webfinger/wiki/WebFingerProtocol">WebFinger docs</a>
+  for usage details.</p>
+
+<p>Source: <a href="https://github.com/snarfed/webfinger-unofficial">github.com/snarfed/webfinger-unofficial</a></p>
+
+</body>
+</html>
+
