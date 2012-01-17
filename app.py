@@ -20,7 +20,8 @@ APP_ID_DOMAINS = {
   'facebook-webfinger': 'facebook.com',
   'twitter-webfinger': 'twitter.com',
   }
-DOMAIN = APP_ID_DOMAINS[app_identity.get_application_id()]
+APP_ID = app_identity.get_application_id()
+DOMAIN = APP_ID_DOMAINS[APP_ID]
 # app_identity.get_default_version_hostname() would be better here, but
 # it doesn't work in dev_appserver since that doesn't set
 # os.environ['DEFAULT_VERSION_HOSTNAME'].
@@ -57,8 +58,8 @@ class UserHandler(webapp.RequestHandler):
       raise webapp.exc.HTTPBadRequest('Missing uri query parameter.')
 
     parsed = urlparse.urlparse(uri)
-    if parsed.scheme != 'acct':
-      raise webapp.exc.HTTPBadRequest('URI must start with acct:.')
+    if parsed.scheme and parsed.scheme != 'acct':
+      raise webapp.exc.HTTPBadRequest('Unsupported URI scheme: %s' % parsed.scheme)
 
     try:
       username, host = parsed.path.split('@')
@@ -66,35 +67,34 @@ class UserHandler(webapp.RequestHandler):
     except ValueError, AssertionError:
       raise webapp.exc.HTTPBadRequest('Bad user URI: %s' % uri)
 
-    expected_host = APP_ID_DOMAINS[app_identity.get_application_id()]
-    if host != expected_host:
+    if host not in (HOST, DOMAIN):
       raise webapp.exc.HTTPBadRequest(
-        'User URI %s has unsupported host %s; expected %s.' %
-        (uri, host, expected_host))
+        'User URI %s has unsupported host %s; expected %s or %s.' %
+        (uri, host, HOST, DOMAIN))
 
     # render template
     vars = {'uri': uri}
-    vars.update(self.get_template_vars(username, host))
+    vars.update(self.get_template_vars(username))
 
     self.response.headers['Content-Type'] = 'application/xrd+xml'
     self.response.headers['Cache-Control'] = 'max-age=300'
     self.response.out.write(template.render('templates/user.xrd', vars))
 
-  def get_template_vars(self, username, host):
-    if host == 'facebook.com':
+  def get_template_vars(self, username):
+    if APP_ID == 'facebook-webfinger':
       return {
           'profile_url': 'http://www.facebook.com/%s' % username,
           'picture_url': 'http://graph.facebook.com/%s/picture' % username,
           'openid_url': 'http://facebook-openid.appspot.com/%s' % username,
           }
-    elif host == 'twitter.com':
+    elif APP_ID == 'twitter-webfinger':
       return {
           'profile_url': 'http://twitter.com/%s' % username,
           'picture_url':
             'http://api.twitter.com/1/users/profile_image?screen_name=%s' % username,
           }
     else:
-      raise webapp.exc.HTTPInternalServerError('%s is not yet supported.' % host)
+      raise webapp.exc.HTTPInternalServerError('Unknown app id %s.' % APP_ID)
 
     return vars
 

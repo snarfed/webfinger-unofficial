@@ -8,9 +8,20 @@ http://twitter-webfinger.appspot.com/
 Feel free to add more!
 
 Background on webfinger:
-http://code.google.com/p/webfinger/wiki/WebFingerProtocol
+http://code.google.com/p/webfinger/
 http://hueniverse.com/2009/09/implementing-webfinger/
+
+To use this in a webfinger client, you'll need to hard-code exceptions for the
+facebook.com and twitter.com hosts and redirect webfinger HTTP requests to the
+corresponding endpoint above. (The user URI may use either domain, e.g.
+snarfed.org@facebook.com or snarfed.org@facebook-webfinger.appspot.com.)
 
 Note the app.yaml.* files, one for each App Engine app id. To work on or deploy
 a specific app id, symlink app.yaml to its app.yaml.xxx file. Likewise, if you
 add a new site, you'll need to add a corresponding app.yaml.xxx file.
+
+Deploy commands:
+rm -f app.yaml && ln -s app.yaml.twitter app.yaml && \
+  ~/google_appengine/appcfg.py update .
+rm -f app.yaml && ln -s app.yaml.facebook app.yaml && \
+  ~/google_appengine/appcfg.py update .
