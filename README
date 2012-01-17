@@ -10,3 +10,7 @@ Feel free to add more!
 Background on webfinger:
 http://code.google.com/p/webfinger/wiki/WebFingerProtocol
 http://hueniverse.com/2009/09/implementing-webfinger/
+
+Note the app.yaml.* files, one for each App Engine app id. To work on or deploy
+a specific app id, symlink app.yaml to its app.yaml.xxx file. Likewise, if you
+add a new site, you'll need to add a corresponding app.yaml.xxx file.
