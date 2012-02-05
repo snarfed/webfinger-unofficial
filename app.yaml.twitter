@@ -6,6 +6,9 @@ api_version: 1
 default_expiration: 1d
 
 handlers:
+- url: /static
+  static_dir: static
+
 - url: (/|/user|/.well-known/host-meta)
   script: app.py
   secure: always
