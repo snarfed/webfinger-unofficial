@@ -18,4 +18,9 @@
     <Link rel='http://specs.openid.net/auth/2.0/provider'
           href='{{ openid_url }}' />
     {% endif %}
+
+    {% if poco_url %}
+    <Link rel='http://portablecontacts.net/spec/1.0'
+          href='{{ poco_url }}' />
+    {% endif %}
 </XRD>
