@@ -11,6 +11,9 @@ Background on webfinger:
 http://code.google.com/p/webfinger/
 http://hueniverse.com/2009/09/implementing-webfinger/
 
+Source: https://github.com/snarfed/webfinger-unofficial
+Contact: Ryan Barrett <webfinger@ryanb.org>
+
 To use this in a webfinger client, you'll need to hard-code exceptions for the
 facebook.com and twitter.com hosts and redirect webfinger HTTP requests to the
 corresponding endpoint above. (The user URI may use either domain, e.g.
