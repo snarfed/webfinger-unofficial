@@ -86,14 +86,16 @@ class UserHandler(webapp.RequestHandler):
           'profile_url': 'http://www.facebook.com/%s' % username,
           'picture_url': 'http://graph.facebook.com/%s/picture' % username,
           'openid_url': 'http://facebook-openid.appspot.com/%s' % username,
-          'poco_url': 'http://facebook-poco.appspot.com/poco/',
+          'poco_url': 'https://facebook-poco.appspot.com/poco/',
+          'activitystreams_url': 'https://facebook-activitystreams.appspot.com/',
           }
     elif APP_ID == 'twitter-webfinger':
       return {
           'profile_url': 'http://twitter.com/%s' % username,
           'picture_url':
             'http://api.twitter.com/1/users/profile_image?screen_name=%s' % username,
-          'poco_url': 'http://twitter-poco.appspot.com/poco/',
+          'poco_url': 'https://twitter-poco.appspot.com/poco/',
+          'activitystreams_url': 'https://twitter-activitystreams.appspot.com/',
           }
     else:
       raise webapp.exc.HTTPInternalServerError('Unknown app id %s.' % APP_ID)

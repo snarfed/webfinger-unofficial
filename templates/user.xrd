@@ -23,4 +23,11 @@
     <Link rel='http://portablecontacts.net/spec/1.0'
           href='{{ poco_url }}' />
     {% endif %}
+
+    {% if activitystreams_url %}
+    <Link rel='http://ns.opensocial.org/2008/opensocial/activitystreams'
+          href='{{ activitystreams_url }}' />
+    <Link rel='http://activitystrea.ms/spec/1.0'
+          href='{{ activitystreams_url }}' />
+    {% endif %}
 </XRD>
