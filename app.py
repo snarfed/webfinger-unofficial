@@ -34,6 +34,7 @@ class FrontPageHandler(webapp.RequestHandler):
   def get(self):
     self.response.headers['Content-Type'] = 'text/html'
     self.response.headers['Cache-Control'] = 'max-age=300'
+    self.response.headers['Access-Control-Allow-Origin'] = '*'
     self.response.out.write(template.render('templates/index.html',
                                             {'domain': DOMAIN, 'host': HOST}))
 
@@ -44,6 +45,7 @@ class HostMetaHandler(webapp.RequestHandler):
   def get(self):
     self.response.headers['Content-Type'] = 'application/xrd+xml'
     self.response.headers['Cache-Control'] = 'max-age=300'
+    self.response.headers['Access-Control-Allow-Origin'] = '*'
     self.response.out.write(template.render('templates/host-meta.xrd',
                                             {'domain': DOMAIN, 'host': HOST}))
 
@@ -78,6 +80,7 @@ class UserHandler(webapp.RequestHandler):
 
     self.response.headers['Content-Type'] = 'application/xrd+xml'
     self.response.headers['Cache-Control'] = 'max-age=300'
+    self.response.headers['Access-Control-Allow-Origin'] = '*'
     self.response.out.write(template.render('templates/user.xrd', vars))
 
   def get_template_vars(self, username):
