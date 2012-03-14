@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Renders and serves the /.well-known/host-meta and /user?uri=... URLs.
+"""Renders and serves the front page, host meta, and user LRDD files.
 """
 
 __author__ = 'Ryan Barrett <webfinger-unofficial@ryanb.org>'
@@ -20,39 +20,67 @@ APP_ID_DOMAINS = {
   'facebook-webfinger': 'facebook.com',
   'twitter-webfinger': 'twitter.com',
   }
-APP_ID = app_identity.get_application_id()
-DOMAIN = APP_ID_DOMAINS[APP_ID]
-# app_identity.get_default_version_hostname() would be better here, but
-# it doesn't work in dev_appserver since that doesn't set
-# os.environ['DEFAULT_VERSION_HOSTNAME'].
-HOST = os.getenv('HTTP_HOST')
+DOMAIN = APP_ID_DOMAINS[appengine_config.APP_ID]
+
+# Included in most static HTTP responses.
+BASE_HEADERS = {
+  'Cache-Control': 'max-age=300',
+  'Access-Control-Allow-Origin': '*',
+  }
+BASE_TEMPLATE_VARS = {
+  'domain': DOMAIN,
+  'host': appengine_config.HOST,
+  }
 
 
-class FrontPageHandler(webapp.RequestHandler):
+class TemplateHandler(webapp.RequestHandler):
+  """Renders and serves a template based on class attributes.
+
+  Subclasses must override at least template_file.
+
+  Attributes:
+    template_vars: dict
+
+  Class attributes:
+    content_type: string
+    template: path to template file
+  """
+  content_type = 'text/html'
+  template_file = None
+
+  def __init__(self, *args, **kwargs):
+    self.template_vars = dict(BASE_TEMPLATE_VARS)
+    super(TemplateHandler, self).__init__(*args, **kwargs)
+
+  def get(self):
+    self.response.headers['Content-Type'] = self.content_type
+    # can't update() because wsgiref.headers.Headers doesn't have it.
+    for key, val in BASE_HEADERS.items():
+      self.response.headers[key] = val
+    self.template_vars.update(self.request.params)
+    self.response.out.write(template.render(self.template_file,
+                                            self.template_vars))
+
+
+class FrontPageHandler(TemplateHandler):
   """Renders and serves /, ie the front page.
   """
-  def get(self):
-    self.response.headers['Content-Type'] = 'text/html'
-    self.response.headers['Cache-Control'] = 'max-age=300'
-    self.response.headers['Access-Control-Allow-Origin'] = '*'
-    self.response.out.write(template.render('templates/index.html',
-                                            {'domain': DOMAIN, 'host': HOST}))
+  template_file = 'templates/index.html'
 
 
-class HostMetaHandler(webapp.RequestHandler):
-  """Renders and serves /.well-known/host-meta.
+class HostMetaXrdHandler(TemplateHandler):
+  """Renders and serves the /.well-known/host-meta XRD file.
   """
-  def get(self):
-    self.response.headers['Content-Type'] = 'application/xrd+xml'
-    self.response.headers['Cache-Control'] = 'max-age=300'
-    self.response.headers['Access-Control-Allow-Origin'] = '*'
-    self.response.out.write(template.render('templates/host-meta.xrd',
-                                            {'domain': DOMAIN, 'host': HOST}))
+  content_type = 'application/xrd+xml'
+  template_file = 'templates/host-meta.xrd'
 
 
-class UserHandler(webapp.RequestHandler):
+class UserHandler(TemplateHandler):
   """Renders and serves /user?uri=...
   """
+  content_type = 'application/xrd+xml'
+  template_file = 'templates/user.xrd'
+
   def get(self):
     # parse and validate user uri
     uri = self.request.get('uri')
@@ -69,22 +97,18 @@ class UserHandler(webapp.RequestHandler):
     except ValueError, AssertionError:
       raise webapp.exc.HTTPBadRequest('Bad user URI: %s' % uri)
 
-    if host not in (HOST, DOMAIN):
+    if host not in (appengine_config.HOST, DOMAIN):
       raise webapp.exc.HTTPBadRequest(
         'User URI %s has unsupported host %s; expected %s or %s.' %
-        (uri, host, HOST, DOMAIN))
+        (uri, host, appengine_config.HOST, DOMAIN))
 
     # render template
-    vars = {'uri': uri}
-    vars.update(self.get_template_vars(username))
-
-    self.response.headers['Content-Type'] = 'application/xrd+xml'
-    self.response.headers['Cache-Control'] = 'max-age=300'
-    self.response.headers['Access-Control-Allow-Origin'] = '*'
-    self.response.out.write(template.render('templates/user.xrd', vars))
+    self.template_vars = {'uri': uri}
+    self.template_vars.update(self.get_template_vars(username))
+    super(UserHandler, self).get()
 
   def get_template_vars(self, username):
-    if APP_ID == 'facebook-webfinger':
+    if appengine_config.APP_ID == 'facebook-webfinger':
       return {
           'profile_url': 'http://www.facebook.com/%s' % username,
           'picture_url': 'http://graph.facebook.com/%s/picture' % username,
@@ -92,7 +116,7 @@ class UserHandler(webapp.RequestHandler):
           'poco_url': 'https://facebook-poco.appspot.com/poco/',
           'activitystreams_url': 'https://facebook-activitystreams.appspot.com/',
           }
-    elif APP_ID == 'twitter-webfinger':
+    elif appengine_config.APP_ID == 'twitter-webfinger':
       return {
           'profile_url': 'http://twitter.com/%s' % username,
           'picture_url':
@@ -101,7 +125,8 @@ class UserHandler(webapp.RequestHandler):
           'activitystreams_url': 'https://twitter-activitystreams.appspot.com/',
           }
     else:
-      raise webapp.exc.HTTPInternalServerError('Unknown app id %s.' % APP_ID)
+      raise webapp.exc.HTTPInternalServerError('Unknown app id %s.' %
+                                               appengine_config.APP_ID)
 
     return vars
 
@@ -109,7 +134,7 @@ class UserHandler(webapp.RequestHandler):
 def main():
   application = webapp.WSGIApplication(
       [('/', FrontPageHandler),
-       ('/.well-known/host-meta', HostMetaHandler),
+       ('/.well-known/host-meta', HostMetaXrdHandler),
        ('/user', UserHandler),
        ],
       debug=appengine_config.DEBUG)
