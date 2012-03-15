@@ -19,6 +19,16 @@
           href='{{ openid_url }}' />
     {% endif %}
 
+    {% if xfn_url %}
+    <Link rel='http://gmpg.org/xfn/11'
+          href='{{ xfn_url }}' />
+    {% endif %}
+
+    {% if hcard_url %}
+    <Link rel='http://microformats.org/profile/hcard'
+          href='{{ hcard_url }}' />
+    {% endif %}
+
     {% if poco_url %}
     <Link rel='http://portablecontacts.net/spec/1.0'
           href='{{ poco_url }}' />

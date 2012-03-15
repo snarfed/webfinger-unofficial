@@ -141,8 +141,11 @@ class UserHandler(XrdOrJrdHandler):
           'activitystreams_url': 'https://facebook-activitystreams.appspot.com/',
           }
     elif appengine_config.APP_ID == 'twitter-webfinger':
+      profile_url = 'http://twitter.com/%s' % username
       vars = {
-          'profile_url': 'http://twitter.com/%s' % username,
+          'profile_url': profile_url,
+          'hcard_url': profile_url,
+          'xfn_url': profile_url,
           'poco_url': 'https://twitter-poco.appspot.com/poco/',
           'activitystreams_url': 'https://twitter-activitystreams.appspot.com/',
           }
