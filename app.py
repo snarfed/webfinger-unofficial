@@ -10,7 +10,7 @@ import logging
 import os
 import urlparse
 
-from google.appengine.api import app_identity
+from google.appengine.api import urlfetch
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext.webapp import template
@@ -141,13 +141,28 @@ class UserHandler(XrdOrJrdHandler):
           'activitystreams_url': 'https://facebook-activitystreams.appspot.com/',
           }
     elif appengine_config.APP_ID == 'twitter-webfinger':
-      return {
+      vars = {
           'profile_url': 'http://twitter.com/%s' % username,
-          'picture_url':
-            'http://api.twitter.com/1/users/profile_image?screen_name=%s' % username,
           'poco_url': 'https://twitter-poco.appspot.com/poco/',
           'activitystreams_url': 'https://twitter-activitystreams.appspot.com/',
           }
+
+      # fetch the image URL. it'd be way easier to pass back the api.twitter.com
+      # URL itself, since it 302 redirects, but twitter explicitly says we
+      # shouldn't do that. :/ ah well.
+      # https://dev.twitter.com/docs/api/1/get/users/profile_image/%3Ascreen_name
+      try:
+        url = ('http://api.twitter.com/1/users/profile_image?screen_name=%s' %
+               username)
+        resp = urlfetch.fetch(url, follow_redirects=False, deadline=30)
+        location = resp.headers.get('Location')
+        if resp.status_code == 302 and location:
+            vars['picture_url'] = location
+      except urlfetch.Error, e:
+        logging.exception('Error while fetching %s' % url)
+
+      return vars
+
     else:
       raise webapp.exc.HTTPInternalServerError('Unknown app id %s.' %
                                                appengine_config.APP_ID)
@@ -158,7 +173,7 @@ class UserHandler(XrdOrJrdHandler):
 def main():
   application = webapp.WSGIApplication(
       [('/', FrontPageHandler),
-       ('/.well-known/host-meta(?:\.json)?', HostMetaHandler),
+       ('/\.well-known/host-meta(?:\.json)?', HostMetaHandler),
        ('/user(?:\.json)?', UserHandler),
        ],
       debug=appengine_config.DEBUG)
