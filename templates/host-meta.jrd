@@ -1,0 +1,8 @@
+{"links": [
+  {
+    "rel": "lrdd",
+    "type": "application/json",
+    "template": "https://{{ host }}/user?uri={uri}&format=json"
+   }
+  ]
+}
