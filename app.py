@@ -36,50 +36,74 @@ BASE_TEMPLATE_VARS = {
 class TemplateHandler(webapp.RequestHandler):
   """Renders and serves a template based on class attributes.
 
-  Subclasses must override at least template_file.
+  Subclasses must override template_file() and may also override content_type().
 
   Attributes:
     template_vars: dict
-
-  Class attributes:
-    content_type: string
-    template: path to template file
   """
-  content_type = 'text/html'
-  template_file = None
-
   def __init__(self, *args, **kwargs):
-    self.template_vars = dict(BASE_TEMPLATE_VARS)
     super(TemplateHandler, self).__init__(*args, **kwargs)
+    self.template_vars = dict(BASE_TEMPLATE_VARS)
+
+  def template_file(self):
+    """Returns the string template file path."""
+    raise NotImplementedError()
+
+  def content_type(self):
+    """Returns the string content type."""
+    return 'text/html'
 
   def get(self):
-    self.response.headers['Content-Type'] = self.content_type
+    self.response.headers['Content-Type'] = self.content_type()
     # can't update() because wsgiref.headers.Headers doesn't have it.
     for key, val in BASE_HEADERS.items():
       self.response.headers[key] = val
     self.template_vars.update(self.request.params)
-    self.response.out.write(template.render(self.template_file,
+    self.response.out.write(template.render(self.template_file(),
                                             self.template_vars))
 
 
 class FrontPageHandler(TemplateHandler):
   """Renders and serves /, ie the front page.
   """
-  template_file = 'templates/index.html'
+  def template_file(self):
+    return 'templates/index.html'
 
 
-class HostMetaXrdHandler(TemplateHandler):
-  """Renders and serves the /.well-known/host-meta XRD file.
+class XrdOrJrdHandler(TemplateHandler):
+  """Renders and serves an XRD or JRD file.
+
+  JRD is served if the request path ends in .json, or the query parameters
+  include 'format=json', or the request headers include
+  'Accept: application/json'.
+
+  Subclasses must override template_prefix().
   """
-  content_type = 'application/xrd+xml'
-  template_file = 'templates/host-meta.xrd'
+  def content_type(self):
+    return 'application/json' if self.is_jrd() else 'application/xrd+xml'
+
+  def template_file(self):
+    return self.template_prefix() + ('.jrd' if self.is_jrd() else '.xrd')
+
+  def is_jrd(self):
+    """Returns True if JRD should be served, False if XRD."""
+    return (os.path.splitext(self.request.path)[1] == '.json' or
+            self.request.get('format') == 'json' or
+            self.request.headers.get('Accept') == 'application/json')
 
 
-class UserHandler(TemplateHandler):
-  """Renders and serves /user?uri=...
+class HostMetaHandler(XrdOrJrdHandler):
+  """Renders and serves the /.well-known/host-meta file.
   """
-  content_type = 'application/xrd+xml'
-  template_file = 'templates/user.xrd'
+  def template_prefix(self):
+    return 'templates/host-meta'
+
+
+class UserHandler(XrdOrJrdHandler):
+  """Renders and serves /user?uri=... requests.
+  """
+  def template_prefix(self):
+    return 'templates/user'
 
   def get(self):
     # parse and validate user uri
@@ -134,8 +158,8 @@ class UserHandler(TemplateHandler):
 def main():
   application = webapp.WSGIApplication(
       [('/', FrontPageHandler),
-       ('/.well-known/host-meta', HostMetaXrdHandler),
-       ('/user', UserHandler),
+       ('/.well-known/host-meta(?:\.json)?', HostMetaHandler),
+       ('/user(?:\.json)?', UserHandler),
        ],
       debug=appengine_config.DEBUG)
   run_wsgi_app(application)
