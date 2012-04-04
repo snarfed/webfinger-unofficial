@@ -10,12 +10,6 @@ from webutil import handlers
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-# maps app id to domain
-DOMAINS = {
-  'facebook-webfinger': 'facebook.com',
-  'twitter-webfinger': 'twitter.com',
-  }
-
 
 class FrontPageHandler(handlers.TemplateHandler):
   """Renders and serves /, ie the front page.
@@ -24,7 +18,7 @@ class FrontPageHandler(handlers.TemplateHandler):
     return 'templates/index.html'
 
   def template_vars(self):
-    return {'domain': DOMAINS[appengine_config.APP_ID]}
+    return {'domain': appengine_config.DOMAIN}
 
 
 def main():

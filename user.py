@@ -16,17 +16,19 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.ext.webapp import template
 
+
 class UserHandler(handlers.XrdOrJrdHandler):
   """Renders and serves /user?uri=... requests.
   """
   def template_prefix(self):
     return 'templates/user'
 
-  def get(self):
+  def template_vars(self):
     # parse and validate user uri
     uri = self.request.get('uri')
     if not uri:
       raise webapp.exc.HTTPBadRequest('Missing uri query parameter.')
+    self.template_vars = {'uri': uri}
 
     parsed = urlparse.urlparse(uri)
     if parsed.scheme and parsed.scheme != 'acct':
@@ -38,17 +40,11 @@ class UserHandler(handlers.XrdOrJrdHandler):
     except ValueError, AssertionError:
       raise webapp.exc.HTTPBadRequest('Bad user URI: %s' % uri)
 
-    if host not in (appengine_config.HOST, DOMAIN):
+    if host not in (appengine_config.HOST, appengine_config.DOMAIN):
       raise webapp.exc.HTTPBadRequest(
         'User URI %s has unsupported host %s; expected %s or %s.' %
-        (uri, host, appengine_config.HOST, DOMAIN))
+        (uri, host, appengine_config.HOST, appengine_config.DOMAIN))
 
-    # render template
-    self.template_vars = {'uri': uri}
-    self.template_vars.update(self.get_template_vars(username))
-    super(UserHandler, self).get()
-
-  def get_template_vars(self, username):
     if appengine_config.APP_ID == 'facebook-webfinger':
       return {
           'profile_url': 'http://www.facebook.com/%s' % username,
@@ -56,6 +52,7 @@ class UserHandler(handlers.XrdOrJrdHandler):
           'openid_url': 'http://facebook-openid.appspot.com/%s' % username,
           'poco_url': 'https://facebook-poco.appspot.com/poco/',
           'activitystreams_url': 'https://facebook-activitystreams.appspot.com/',
+          'uri': uri,
           }
     elif appengine_config.APP_ID == 'twitter-webfinger':
       profile_url = 'http://twitter.com/%s' % username
@@ -65,6 +62,7 @@ class UserHandler(handlers.XrdOrJrdHandler):
           'xfn_url': profile_url,
           'poco_url': 'https://twitter-poco.appspot.com/poco/',
           'activitystreams_url': 'https://twitter-activitystreams.appspot.com/',
+          'uri': uri,
           }
 
       # fetch the image URL. it'd be way easier to pass back the api.twitter.com
@@ -86,8 +84,6 @@ class UserHandler(handlers.XrdOrJrdHandler):
     else:
       raise webapp.exc.HTTPInternalServerError('Unknown app id %s.' %
                                                appengine_config.APP_ID)
-
-    return vars
 
 
 application = webapp.WSGIApplication(

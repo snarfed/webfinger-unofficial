@@ -14,5 +14,5 @@ handlers:
   secure: always
 
 - url: /user(\.json)?
-  script: app.py
+  script: user.py
   secure: always
