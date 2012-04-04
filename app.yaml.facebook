@@ -9,6 +9,10 @@ handlers:
 - url: /static
   static_dir: static
 
-- url: (/|/user|/.well-known/host-meta)(\.json)?
+- url: (/|/.well-known/host-meta)(\.json)?
+  script: app.py
+  secure: always
+
+- url: /user(\.json)?
   script: app.py
   secure: always
