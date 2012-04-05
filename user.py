@@ -9,17 +9,18 @@ import appengine_config
 import logging
 import os
 import urlparse
+from webob import exc
 from webutil import handlers
+from webutil import webapp2
 
 from google.appengine.api import urlfetch
-from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
-from google.appengine.ext.webapp import template
 
 
 class UserHandler(handlers.XrdOrJrdHandler):
   """Renders and serves /user?uri=... requests.
   """
+
   def template_prefix(self):
     return 'templates/user'
 
@@ -27,21 +28,21 @@ class UserHandler(handlers.XrdOrJrdHandler):
     # parse and validate user uri
     uri = self.request.get('uri')
     if not uri:
-      raise webapp.exc.HTTPBadRequest('Missing uri query parameter.')
+      raise exc.HTTPBadRequest('Missing uri query parameter.')
     self.template_vars = {'uri': uri}
 
     parsed = urlparse.urlparse(uri)
     if parsed.scheme and parsed.scheme != 'acct':
-      raise webapp.exc.HTTPBadRequest('Unsupported URI scheme: %s' % parsed.scheme)
+      raise exc.HTTPBadRequest('Unsupported URI scheme: %s' % parsed.scheme)
 
     try:
       username, host = parsed.path.split('@')
       assert username, host
     except ValueError, AssertionError:
-      raise webapp.exc.HTTPBadRequest('Bad user URI: %s' % uri)
+      raise exc.HTTPBadRequest('Bad user URI: %s' % uri)
 
     if host not in (appengine_config.HOST, appengine_config.DOMAIN):
-      raise webapp.exc.HTTPBadRequest(
+      raise exc.HTTPBadRequest(
         'User URI %s has unsupported host %s; expected %s or %s.' %
         (uri, host, appengine_config.HOST, appengine_config.DOMAIN))
 
@@ -82,11 +83,11 @@ class UserHandler(handlers.XrdOrJrdHandler):
       return vars
 
     else:
-      raise webapp.exc.HTTPInternalServerError('Unknown app id %s.' %
-                                               appengine_config.APP_ID)
+      raise exc.HTTPInternalServerError('Unknown app id %s.' %
+                                        appengine_config.APP_ID)
 
 
-application = webapp.WSGIApplication(
+application = webapp2.WSGIApplication(
   [('/user(?:\.json)?', UserHandler)],
   debug=appengine_config.DEBUG)
 

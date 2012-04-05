@@ -9,4 +9,4 @@ DOMAINS = {
   'twitter-webfinger': 'twitter.com',
   }
 
-DOMAIN = DOMAINS[APP_ID]
+DOMAIN = DOMAINS.get(APP_ID)
