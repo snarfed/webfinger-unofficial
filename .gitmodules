@@ -1,3 +1,6 @@
 [submodule "webutil"]
 	path = webutil
 	url = git@github.com:snarfed/webutil.git
+[submodule "django-salmon"]
+	path = django-salmon
+	url = git://github.com/snarfed/django-salmon.git
