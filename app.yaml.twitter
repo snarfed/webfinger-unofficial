@@ -16,3 +16,12 @@ handlers:
 - url: /user(\.json)?
   script: user.py
   secure: always
+
+skip_files:
+- ^(.*/)?.*\.py[co]
+- ^(.*/)?.*/RCS/.*
+- ^(.*/)?\..*
+- ^(.*/)?.*\.bak$
+# don't need anything in the webapp-improved subdirs, especially since
+# webapp-improved/lib/ has over 1k files!
+- webutil/webapp-improved/.*/.*
