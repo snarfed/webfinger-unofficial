@@ -26,6 +26,11 @@ class UserHandlerTest(testutil.HandlerTest):
     appengine_config.DOMAIN = 'facebook.com'
     self.response = webapp2.Response()
 
+  def get_public_exponent(self, uri):
+    entity = user.User.get_by_key_name(uri)
+    assert entity.mod and entity.public_exponent and entity.private_exponent
+    return entity.public_exponent
+
   def test_no_uri_error(self):
     resp = user.application.get_response('/user')
     self.assertEquals(400, resp.status_int)
@@ -45,6 +50,8 @@ class UserHandlerTest(testutil.HandlerTest):
   def test_facebook(self):
     req = webapp2.Request.blank('/user.json?uri=acct:ryan@facebook.com')
     handler = user.UserHandler(req, self.response)
+
+    vars = handler.template_vars()
     self.assert_equals(
       {'profile_url': 'http://www.facebook.com/ryan',
        'picture_url': 'http://graph.facebook.com/ryan/picture',
@@ -52,8 +59,10 @@ class UserHandlerTest(testutil.HandlerTest):
        'poco_url': 'https://facebook-poco.appspot.com/poco/',
        'activitystreams_url': 'https://facebook-activitystreams.appspot.com/',
        'uri': 'acct:ryan@facebook.com',
+       'magic_key_public_exponent': self.get_public_exponent('acct:ryan@facebook.com'),
        },
-      handler.template_vars())
+      vars)
+
 
   def test_twitter(self):
     redirect = self.UrlfetchResult(302, '', headers={'Location': 'http://my/image'})
@@ -67,6 +76,7 @@ class UserHandlerTest(testutil.HandlerTest):
 
     req = webapp2.Request.blank('/user.json?uri=acct:ryan@twitter.com')
     handler = user.UserHandler(req, self.response)
+    vars = handler.template_vars()
     self.assert_equals(
       {'profile_url': 'http://twitter.com/ryan',
        'hcard_url': 'http://twitter.com/ryan',
@@ -75,8 +85,18 @@ class UserHandlerTest(testutil.HandlerTest):
        'activitystreams_url': 'https://twitter-activitystreams.appspot.com/',
        'uri': 'acct:ryan@twitter.com',
        'picture_url': 'http://my/image',
+       'magic_key_public_exponent': self.get_public_exponent('acct:ryan@twitter.com'),
        },
-      handler.template_vars())
+      vars)
+
+  def test_keypair_is_persistent(self):
+    req = webapp2.Request.blank('/user.json?uri=acct:ryan@facebook.com')
+    handler = user.UserHandler(req, self.response)
+
+    first_pubexp = handler.template_vars()['magic_key_public_exponent']
+    second_pubexp = handler.template_vars()['magic_key_public_exponent']
+    self.assertEqual(first_pubexp, second_pubexp)
+
 
   def test_twitter_profile_image_urlfetch_fails(self):
     urlfetch.fetch('http://api.twitter.com/1/users/profile_image?screen_name=ryan',

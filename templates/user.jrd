@@ -1,6 +1,7 @@
 {
 "subject": "{{ uri }}",
 "aliases": ["{{ profile_url }}"],
+"magic_keys": [{"value": "RSA.{{ magic_key_public_exponent }}"}],
 
 "links": [
   {

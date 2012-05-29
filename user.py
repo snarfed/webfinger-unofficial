@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 """Serves user LRDD files at the /user endpoint.
+
+Includes Magic Signatures public keys. Details:
+http://salmon-protocol.googlecode.com/svn/trunk/draft-panzer-magicsig-01.html
 """
 
 __author__ = 'Ryan Barrett <webfinger-unofficial@ryanb.org>'
@@ -13,8 +16,28 @@ from webob import exc
 from webutil import handlers
 from webutil import webapp2
 
+from django_salmon import magicsigs
 from google.appengine.api import urlfetch
+from google.appengine.ext import db
 from google.appengine.ext.webapp.util import run_wsgi_app
+
+
+class User(db.Model):
+  """Stores a user's public/private key pair used for Magic Signatures.
+
+  The key name is the user URI, including the acct: prefix.
+
+  The modulus and exponent properties are all encoded as base64url (ie URL-safe
+  base64) strings as described in RFC 4648 and section 5.1 of the Magic
+  Signatures spec.
+
+  Magic Signatures are used to sign Salmon slaps. Details:
+  http://salmon-protocol.googlecode.com/svn/trunk/draft-panzer-magicsig-01.html
+  http://salmon-protocol.googlecode.com/svn/trunk/draft-panzer-salmon-00.html
+  """
+  mod = db.StringProperty(required=True)
+  public_exponent = db.StringProperty(required=True)
+  private_exponent = db.StringProperty(required=True)
 
 
 class UserHandler(handlers.XrdOrJrdHandler):
@@ -29,7 +52,6 @@ class UserHandler(handlers.XrdOrJrdHandler):
     uri = self.request.get('uri')
     if not uri:
       raise exc.HTTPBadRequest('Missing uri query parameter.')
-    self.template_vars = {'uri': uri}
 
     parsed = urlparse.urlparse(uri)
     if parsed.scheme and parsed.scheme != 'acct':
@@ -46,25 +68,36 @@ class UserHandler(handlers.XrdOrJrdHandler):
         'User URI %s has unsupported host %s; expected %s or %s.' %
         (uri, host, appengine_config.HOST, appengine_config.DOMAIN))
 
+    # get their public key from the datastore. if they don't have a key pair,
+    # generate one.
+    mod, pubexp, privexp = magicsigs.generate()
+    user = User.get_or_insert(key_name=uri, mod=mod, public_exponent=pubexp,
+                              private_exponent=privexp)
+
+    # construct the response
+    vars = {
+      'uri': uri,
+      'magic_key_public_exponent': user.public_exponent,
+      }
+
     if appengine_config.APP_ID == 'facebook-webfinger':
-      return {
+      vars.update({
           'profile_url': 'http://www.facebook.com/%s' % username,
           'picture_url': 'http://graph.facebook.com/%s/picture' % username,
           'openid_url': 'http://facebook-openid.appspot.com/%s' % username,
           'poco_url': 'https://facebook-poco.appspot.com/poco/',
           'activitystreams_url': 'https://facebook-activitystreams.appspot.com/',
-          'uri': uri,
-          }
+          })
+      return vars
     elif appengine_config.APP_ID == 'twitter-webfinger':
       profile_url = 'http://twitter.com/%s' % username
-      vars = {
+      vars.update({
           'profile_url': profile_url,
           'hcard_url': profile_url,
           'xfn_url': profile_url,
           'poco_url': 'https://twitter-poco.appspot.com/poco/',
           'activitystreams_url': 'https://twitter-activitystreams.appspot.com/',
-          'uri': uri,
-          }
+          })
 
       # fetch the image URL. it'd be way easier to pass back the api.twitter.com
       # URL itself, since it 302 redirects, but twitter explicitly says we

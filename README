@@ -28,3 +28,15 @@ rm -f app.yaml && ln -s app.yaml.twitter app.yaml && \
   ~/google_appengine/appcfg.py --oauth2 update . && \
 rm -f app.yaml && ln -s app.yaml.facebook app.yaml && \
   ~/google_appengine/appcfg.py --oauth2 update .
+
+
+Development notes:
+
+App Engine's dev_appserver.py expects its third party libraries like PyCrypto
+to be in the system site packages dir, usually /usr/lib/python2.6/dist-packages.
+I'm developing this on Ubuntu 10.04, which had an old version of PyCrypto (2.0),
+and I needed at least 2.1 to get Crypto.Random, so I removed 2.0 and manually
+installed 2.3 into /usr/local, then symlinked it in /usr/lib:
+
+cd /usr/lib/python2.6/dist-packages
+sudo ln -s /usr/local/lib/python2.6/dist-packages/Crypto
