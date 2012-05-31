@@ -10,3 +10,5 @@ DOMAINS = {
   }
 
 DOMAIN = DOMAINS.get(APP_ID)
+
+USER_KEY_HANDLER_SECRET = read('user_key_handler_secret')

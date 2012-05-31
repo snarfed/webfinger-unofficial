@@ -19,7 +19,7 @@ handlers:
   script: app.py
   secure: always
 
-- url: /user(\.json)?
+- url: /user(\.json|_key)?
   script: user.py
   secure: always
 

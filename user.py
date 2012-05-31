@@ -7,6 +7,11 @@ http://salmon-protocol.googlecode.com/svn/trunk/draft-panzer-magicsig-01.html
 
 __author__ = 'Ryan Barrett <webfinger-unofficial@ryanb.org>'
 
+try:
+  import json
+except ImportError:
+  import simplejson as json
+
 import appengine_config
 
 import logging
@@ -120,8 +125,28 @@ class UserHandler(handlers.XrdOrJrdHandler):
                                         appengine_config.APP_ID)
 
 
+class UserKeyHandler(webapp2.RequestHandler):
+  """Serves users' Magic Signature private keys.
+
+  The response is a JSON object with public_exponent, private_exponent, and mod.
+  """
+
+  def get(self):
+    if self.request.get('secret') != appengine_config.USER_KEY_HANDLER_SECRET:
+      raise exc.HTTPForbidden()
+  
+    user = User.get_by_key_name(self.request.get('uri'))
+    if not user:
+      raise exc.HTTPNotFound()
+
+    self.response.headers['Content-Type'] = 'application/json'
+    self.response.out.write(json.dumps(db.to_dict(user), indent=2))
+
+
 application = webapp2.WSGIApplication(
-  [('/user(?:\.json)?', UserHandler)],
+  [('/user(?:\.json)?', UserHandler),
+   ('/user_key', UserKeyHandler),
+   ],
   debug=appengine_config.DEBUG)
 
 
