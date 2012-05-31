@@ -109,22 +109,14 @@ class UserHandlerTest(testutil.HandlerTest):
     self.assertEqual(first_pubexp, second_pubexp)
 
   def test_user_key_handler(self):
-    user.User(key_name='acct:ryan@facebook.com',
-              public_exponent='123', private_exponent='456', mod='789').save()
-    resp = user.application.get_response(
-      '/user_key?uri=acct:ryan@facebook.com&secret=secret')
-
+    resp = user.application.get_response('/user_key?uri=acct:ryan&secret=secret')
+    ryan = user.User.get_by_key_name('acct:ryan')
     self.assertEqual(200, resp.status_int)
     self.assertEqual({
-        'public_exponent': '123',
-        'private_exponent': '456',
-        'mod': '789',
+        'public_exponent': ryan.public_exponent,
+        'private_exponent': ryan.private_exponent,
+        'mod': ryan.mod
        }, json.loads(resp.body))
-
-  def test_user_key_handler_not_found(self):
-    resp = user.application.get_response(
-      '/user_key?uri=acct:not@found.com&secret=secret')
-    self.assertEqual(404, resp.status_int)
 
   def test_user_key_handler_bad_secret(self):
     user.User(key_name='acct:ryan@facebook.com',

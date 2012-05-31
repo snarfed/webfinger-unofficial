@@ -44,6 +44,22 @@ class User(db.Model):
   public_exponent = db.StringProperty(required=True)
   private_exponent = db.StringProperty(required=True)
 
+  @staticmethod
+  @db.transactional
+  def get_or_create(uri):
+    """Loads and returns a User from the datastore. Creates it if necessary."""
+    user = User.get_by_key_name(uri)
+
+    if not user:
+      # this uses urandom(), and does some nontrivial math, so it can take a
+      # while depending on the amount of randomness available on the system.
+      mod, pubexp, privexp = magicsigs.generate()
+      user = User(key_name=uri, mod=mod, public_exponent=pubexp,
+                  private_exponent=privexp)
+      user.put()
+
+    return user
+
 
 class UserHandler(handlers.XrdOrJrdHandler):
   """Renders and serves /user?uri=... requests.
@@ -73,11 +89,7 @@ class UserHandler(handlers.XrdOrJrdHandler):
         'User URI %s has unsupported host %s; expected %s or %s.' %
         (uri, host, appengine_config.HOST, appengine_config.DOMAIN))
 
-    # get their public key from the datastore. if they don't have a key pair,
-    # generate one.
-    mod, pubexp, privexp = magicsigs.generate()
-    user = User.get_or_insert(key_name=uri, mod=mod, public_exponent=pubexp,
-                              private_exponent=privexp)
+    user = User.get_or_create(uri)
 
     # construct the response
     vars = {
@@ -135,10 +147,7 @@ class UserKeyHandler(webapp2.RequestHandler):
     if self.request.get('secret') != appengine_config.USER_KEY_HANDLER_SECRET:
       raise exc.HTTPForbidden()
   
-    user = User.get_by_key_name(self.request.get('uri'))
-    if not user:
-      raise exc.HTTPNotFound()
-
+    user = User.get_or_create(self.request.get('uri'))
     self.response.headers['Content-Type'] = 'application/json'
     self.response.out.write(json.dumps(db.to_dict(user), indent=2))
 
