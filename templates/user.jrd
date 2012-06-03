@@ -1,7 +1,10 @@
 {
 "subject": "{{ uri }}",
 "aliases": ["{{ profile_url }}"],
-"magic_keys": [{"value": "RSA.{{ magic_key_public_exponent }}"}],
+
+{% if magic_public_key %}
+"magic_keys": [{"value": "{{ magic_public_key }}"}],
+{% endif %}
 
 "links": [
   {
@@ -15,6 +18,13 @@
     "type": "text/html",
     "href": "{{ profile_url }}"
   },
+
+  {% if magic_public_key %}
+  {
+    "rel": "magic-public-key",
+    "href": "{{ magic_public_key }}"
+  },
+  {% endif %}
   
   {% if picture_url %}
   {

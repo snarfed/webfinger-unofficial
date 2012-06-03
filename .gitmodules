@@ -3,7 +3,7 @@
 	url = git@github.com:snarfed/webutil.git
 [submodule "django-salmon"]
 	path = django-salmon
-	url = git://github.com/snarfed/django-salmon.git
+	url = git@github.com:snarfed/django-salmon.git
 [submodule "python-dateutil"]
 	path = python-dateutil
 	url = git://github.com/paxan/python-dateutil.git

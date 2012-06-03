@@ -48,6 +48,7 @@ class UserHandlerTest(testutil.HandlerTest):
     handler = user.UserHandler(req, self.response)
 
     vars = handler.template_vars()
+    ryan = user.User.get_by_key_name('acct:ryan@facebook.com')
     self.assert_equals(
       {'profile_url': 'http://www.facebook.com/ryan',
        'picture_url': 'http://graph.facebook.com/ryan/picture',
@@ -55,8 +56,7 @@ class UserHandlerTest(testutil.HandlerTest):
        'poco_url': 'https://facebook-poco.appspot.com/poco/',
        'activitystreams_url': 'https://facebook-activitystreams.appspot.com/',
        'uri': 'acct:ryan@facebook.com',
-       'magic_key_public_exponent':
-         user.User.get_by_key_name('acct:ryan@facebook.com').public_exponent,
+       'magic_public_key': 'RSA.%s.%s' % (ryan.public_exponent, ryan.mod),
        },
       vars)
 
@@ -74,6 +74,7 @@ class UserHandlerTest(testutil.HandlerTest):
     req = webapp2.Request.blank('/user.json?uri=acct:ryan@twitter.com')
     handler = user.UserHandler(req, self.response)
     vars = handler.template_vars()
+    ryan = user.User.get_by_key_name('acct:ryan@twitter.com')
     self.assert_equals(
       {'profile_url': 'http://twitter.com/ryan',
        'hcard_url': 'http://twitter.com/ryan',
@@ -82,8 +83,7 @@ class UserHandlerTest(testutil.HandlerTest):
        'activitystreams_url': 'https://twitter-activitystreams.appspot.com/',
        'uri': 'acct:ryan@twitter.com',
        'picture_url': 'http://my/image',
-       'magic_key_public_exponent':
-         user.User.get_by_key_name('acct:ryan@twitter.com').public_exponent,
+       'magic_public_key': 'RSA.%s.%s' % (ryan.public_exponent, ryan.mod),
        },
       vars)
 
@@ -104,9 +104,9 @@ class UserHandlerTest(testutil.HandlerTest):
     req = webapp2.Request.blank('/user.json?uri=acct:ryan@facebook.com')
     handler = user.UserHandler(req, self.response)
 
-    first_pubexp = handler.template_vars()['magic_key_public_exponent']
-    second_pubexp = handler.template_vars()['magic_key_public_exponent']
-    self.assertEqual(first_pubexp, second_pubexp)
+    first = handler.template_vars()
+    second = handler.template_vars()
+    self.assertEqual(first['magic_public_key'], second['magic_public_key'])
 
   def test_user_key_handler(self):
     resp = user.application.get_response('/user_key?uri=acct:ryan&secret=secret')

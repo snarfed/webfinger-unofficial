@@ -94,7 +94,7 @@ class UserHandler(handlers.XrdOrJrdHandler):
     # construct the response
     vars = {
       'uri': uri,
-      'magic_key_public_exponent': user.public_exponent,
+      'magic_public_key': 'RSA.%s.%s' % (user.public_exponent, user.mod),
       }
 
     if appengine_config.APP_ID == 'facebook-webfinger':
