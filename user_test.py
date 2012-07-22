@@ -40,7 +40,7 @@ class UserHandlerTest(testutil.HandlerTest):
     self.assertEquals(400, resp.status_int)
 
   def test_uri_wrong_domain_error(self):
-    resp = user.application.get_response('/user?uri=acct:ryan@twitter.com')
+    resp = user.application.get_response('/user?uri=acct:ryan@xyz.com')
     self.assertEquals(400, resp.status_int)
 
   def test_facebook(self):
@@ -56,7 +56,7 @@ class UserHandlerTest(testutil.HandlerTest):
        'poco_url': 'https://facebook-poco.appspot.com/poco/',
        'activitystreams_url': 'https://facebook-activitystreams.appspot.com/',
        'uri': 'acct:ryan@facebook.com',
-       'magic_public_key': 'RSA.%s.%s' % (ryan.public_exponent, ryan.mod),
+       'magic_public_key': 'RSA.%s.%s' % (ryan.mod, ryan.public_exponent),
        },
       vars)
 
@@ -83,7 +83,7 @@ class UserHandlerTest(testutil.HandlerTest):
        'activitystreams_url': 'https://twitter-activitystreams.appspot.com/',
        'uri': 'acct:ryan@twitter.com',
        'picture_url': 'http://my/image',
-       'magic_public_key': 'RSA.%s.%s' % (ryan.public_exponent, ryan.mod),
+       'magic_public_key': 'RSA.%s.%s' % (ryan.mod, ryan.public_exponent),
        },
       vars)
 

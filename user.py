@@ -19,6 +19,7 @@ import os
 import urlparse
 from webob import exc
 from webutil import handlers
+from webutil import util
 from webutil import webapp2
 
 from django_salmon import magicsigs
@@ -53,7 +54,7 @@ class User(db.Model):
     if not user:
       # this uses urandom(), and does some nontrivial math, so it can take a
       # while depending on the amount of randomness available on the system.
-      mod, pubexp, privexp = magicsigs.generate()
+      pubexp, mod, privexp = magicsigs.generate()
       user = User(key_name=uri, mod=mod, public_exponent=pubexp,
                   private_exponent=privexp)
       user.put()
@@ -74,27 +75,18 @@ class UserHandler(handlers.XrdOrJrdHandler):
     if not uri:
       raise exc.HTTPBadRequest('Missing uri query parameter.')
 
-    parsed = urlparse.urlparse(uri)
-    if parsed.scheme and parsed.scheme != 'acct':
-      raise exc.HTTPBadRequest('Unsupported URI scheme: %s' % parsed.scheme)
-
     try:
-      username, host = parsed.path.split('@')
-      assert username, host
-    except ValueError, AssertionError:
-      raise exc.HTTPBadRequest('Bad user URI: %s' % uri)
-
-    if host not in (appengine_config.HOST, appengine_config.DOMAIN):
-      raise exc.HTTPBadRequest(
-        'User URI %s has unsupported host %s; expected %s or %s.' %
-        (uri, host, appengine_config.HOST, appengine_config.DOMAIN))
+      allowed_domains = (appengine_config.HOST, appengine_config.DOMAIN)
+      username, host = util.parse_acct_uri(uri, allowed_domains)
+    except ValueError, e:
+      raise exc.HTTPBadRequest(e.message)
 
     user = User.get_or_create(uri)
 
     # construct the response
     vars = {
       'uri': uri,
-      'magic_public_key': 'RSA.%s.%s' % (user.public_exponent, user.mod),
+      'magic_public_key': 'RSA.%s.%s' % (user.mod, user.public_exponent),
       }
 
     if appengine_config.APP_ID == 'facebook-webfinger':
