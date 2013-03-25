@@ -13,6 +13,7 @@ http://hueniverse.com/2009/09/implementing-webfinger/
 
 Source: https://github.com/snarfed/webfinger-unofficial
 Contact: Ryan Barrett <webfinger@ryanb.org>
+License: This project is placed in the public domain.
 
 To use this in a webfinger client, you'll need to hard-code exceptions for the
 facebook.com and twitter.com hosts and redirect webfinger HTTP requests to the
