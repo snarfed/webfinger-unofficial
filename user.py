@@ -62,12 +62,17 @@ class User(db.Model):
     return user
 
 
-class UserHandler(handlers.XrdOrJrdHandler):
-  """Renders and serves /user?uri=... requests.
+class BaseHandler(handlers.XrdOrJrdHandler):
+  """Renders and serves WebFist /.well-known/webfinger?resource=... requests.
   """
 
   def template_prefix(self):
-    return 'templates/user'
+    return 'templates/webfist'
+
+  def is_jrd(self):
+    """WebFist is always JSON. (I think?)
+    """
+    return True
 
   def template_vars(self):
     # parse and validate user uri
@@ -77,18 +82,35 @@ class UserHandler(handlers.XrdOrJrdHandler):
 
     try:
       allowed_domains = (appengine_config.HOST, appengine_config.DOMAIN)
-      username, host = util.parse_acct_uri(uri, allowed_domains)
+      username, domain = util.parse_acct_uri(uri, allowed_domains)
     except ValueError, e:
       raise exc.HTTPBadRequest(e.message)
 
-    user = User.get_or_create(uri)
-
-    # construct the response
-    vars = {
+    return {
+      'domain': domain,
+      'host': appengine_config.HOST,
       'uri': uri,
-      'magic_public_key': 'RSA.%s.%s' % (user.mod, user.public_exponent),
+      'username': username,
       }
 
+
+class UserHandler(BaseHandler):
+  """Renders and serves /user?uri=... requests.
+  """
+
+  def template_prefix(self):
+    return 'templates/user'
+
+  def is_jrd(self):
+    return handlers.XrdOrJrdHandler.is_jrd(self)
+
+  def template_vars(self):
+    vars = super(UserHandler, self).template_vars()
+
+    user = User.get_or_create(vars['uri'])
+    vars['magic_public_key'] = 'RSA.%s.%s' % (user.mod, user.public_exponent)
+
+    username = vars['username']
     if appengine_config.APP_ID == 'facebook-webfinger':
       vars.update({
           'profile_url': 'http://www.facebook.com/%s' % username,
@@ -145,7 +167,7 @@ class UserKeyHandler(webapp2.RequestHandler):
 
 
 application = webapp2.WSGIApplication(
-  [('/(?:.well-known/webfinger|user)(?:\.json)?', UserHandler),
+  [('/(?:.well-known/webfinger)(?:\.json)?', BaseHandler),
    ('/user(?:\.json)?', UserHandler),
    ('/user_key', UserKeyHandler),
    ],

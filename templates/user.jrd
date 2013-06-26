@@ -12,7 +12,7 @@
     "type": "text/html",
     "href": "{{ profile_url }}"
   },
-  
+
   {
     "rel": "describedby",
     "type": "text/html",
@@ -25,48 +25,48 @@
     "href": "{{ magic_public_key }}"
   },
   {% endif %}
-  
+
   {% if picture_url %}
   {
     "rel": "http://webfinger.net/rel/avatar",
     "href": "{{ picture_url }}"
   },
   {% endif %}
-  
+
   {% if openid_url %}
   {
     "rel": "http://specs.openid.net/auth/2.0/provider",
     "href": "{{ openid_url }}"
   },
   {% endif %}
-  
+
   {% if hcard_url %}
   {
     "rel": "http://microformats.org/profile/hcard",
     "href": "{{ hcard_url }}"
   },
   {% endif %}
-  
+
   {% if xfn_url %}
   {
     "rel": "http://gmpg.org/xfn/11",
     "href": "{{ xfn_url }}"
   },
   {% endif %}
-  
+
   {% if poco_url %}
   {
     "rel": "http://portablecontacts.net/spec/1.0",
     "href": "{{ poco_url }}"
   },
   {% endif %}
-  
+
   {% if activitystreams_url %}
   {
     "rel": "http://ns.opensocial.org/2008/opensocial/activitystreams",
     "href": "{{ activitystreams_url }}"
   },
-  
+
   {
     "rel": "http://activitystrea.ms/spec/1.0",
     "href": "{{ activitystreams_url }}"

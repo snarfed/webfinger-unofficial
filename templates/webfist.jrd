@@ -1,0 +1,10 @@
+{
+  "subject": "{{ username }}@{{ domain }}",
+  "links": [
+    {
+      "rel": "http://webfist.org/spec/rel",
+      "href": "https://{{ host }}/user.json?uri={{ uri }}",
+      "properties": {}
+    }
+  ]
+}
