@@ -18,6 +18,7 @@
   for <a href="http://{{ domain }}/">{{ domain }}</a>. It serves these endpoints:</p>
 <ul>
   <li><code>https://{{ host }}/.well-known/host-meta</code></li>
+  <li><code>https://{{ host }}/.well-known/webfinger?resource={uri}</code></li>
   <li><code>https://{{ host }}/user?uri={uri}</code></li>
 </ul>
 <p>The user URI is <code>acct:<i>username</i>@{{ domain }}</code>,
