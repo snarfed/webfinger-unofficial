@@ -71,7 +71,7 @@ class UserHandler(handlers.XrdOrJrdHandler):
 
   def template_vars(self):
     # parse and validate user uri
-    uri = self.request.get('uri')
+    uri = self.request.get('uri') or self.request.get('resource')
     if not uri:
       raise exc.HTTPBadRequest('Missing uri query parameter.')
 
@@ -138,14 +138,15 @@ class UserKeyHandler(webapp2.RequestHandler):
   def get(self):
     if self.request.get('secret') != appengine_config.USER_KEY_HANDLER_SECRET:
       raise exc.HTTPForbidden()
-  
+
     user = User.get_or_create(self.request.get('uri'))
     self.response.headers['Content-Type'] = 'application/json'
     self.response.out.write(json.dumps(db.to_dict(user), indent=2))
 
 
 application = webapp2.WSGIApplication(
-  [('/user(?:\.json)?', UserHandler),
+  [('/(?:.well-known/webfinger|user)(?:\.json)?', UserHandler),
+   ('/user(?:\.json)?', UserHandler),
    ('/user_key', UserKeyHandler),
    ],
   debug=appengine_config.DEBUG)

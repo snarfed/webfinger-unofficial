@@ -19,6 +19,10 @@ handlers:
   script: app.py
   secure: always
 
+- url: (/.well-known/webfinger)(\.json)?
+  script: user.py
+  secure: always
+
 - url: /user(\.json|_key)?
   script: user.py
   secure: always
