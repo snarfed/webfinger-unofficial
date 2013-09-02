@@ -24,6 +24,9 @@ networks. The other projects include
 [salmon-](https://github.com/snarfed/salmon-unofficial), and
 [ostatus-unofficial](https://github.com/snarfed/ostatus-unofficial).
 
+Google isn't included because it already provides a WebFinger server for Google
+accounts at `gmail.com`.
+
 License: This project is placed in the public domain.
 
 
