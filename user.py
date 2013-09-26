@@ -135,7 +135,7 @@ class UserHandler(BaseHandler):
       # shouldn't do that. :/ ah well.
       # https://dev.twitter.com/docs/api/1/get/users/profile_image/%3Ascreen_name
       try:
-        url = ('http://api.twitter.com/1/users/profile_image?screen_name=%s' %
+        url = ('http://api.twitter.com/1.1/users/profile_image?screen_name=%s' %
                username)
         resp = urlfetch.fetch(url, follow_redirects=False, deadline=30)
         location = resp.headers.get('Location')

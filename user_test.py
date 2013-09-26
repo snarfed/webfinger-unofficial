@@ -50,7 +50,9 @@ class UserHandlerTest(testutil.HandlerTest):
     vars = handler.template_vars()
     ryan = user.User.get_by_key_name('acct:ryan@facebook.com')
     self.assert_equals(
-      {'profile_url': 'http://www.facebook.com/ryan',
+      {'username': 'ryan',
+       'domain': 'facebook.com',
+       'profile_url': 'http://www.facebook.com/ryan',
        'picture_url': 'http://graph.facebook.com/ryan/picture',
        'openid_url': 'http://facebook-openid.appspot.com/ryan',
        'poco_url': 'https://facebook-poco.appspot.com/poco/',
@@ -63,7 +65,7 @@ class UserHandlerTest(testutil.HandlerTest):
 
   def test_twitter(self):
     redirect = self.UrlfetchResult(302, '', headers={'Location': 'http://my/image'})
-    urlfetch.fetch('http://api.twitter.com/1/users/profile_image?screen_name=ryan',
+    urlfetch.fetch('http://api.twitter.com/1.1/users/profile_image?screen_name=ryan',
                    deadline=30, follow_redirects=False)\
                    .AndReturn(redirect)
     self.mox.ReplayAll()
@@ -76,7 +78,9 @@ class UserHandlerTest(testutil.HandlerTest):
     vars = handler.template_vars()
     ryan = user.User.get_by_key_name('acct:ryan@twitter.com')
     self.assert_equals(
-      {'profile_url': 'http://twitter.com/ryan',
+      {'username': 'ryan',
+       'domain': 'twitter.com',
+       'profile_url': 'http://twitter.com/ryan',
        'hcard_url': 'http://twitter.com/ryan',
        'xfn_url': 'http://twitter.com/ryan',
        'poco_url': 'https://twitter-poco.appspot.com/poco/',
@@ -88,7 +92,7 @@ class UserHandlerTest(testutil.HandlerTest):
       vars)
 
   def test_twitter_profile_image_urlfetch_fails(self):
-    urlfetch.fetch('http://api.twitter.com/1/users/profile_image?screen_name=ryan',
+    urlfetch.fetch('http://api.twitter.com/1.1/users/profile_image?screen_name=ryan',
                    deadline=30, follow_redirects=False)\
                    .AndRaise(urlfetch.Error())
     self.mox.ReplayAll()
