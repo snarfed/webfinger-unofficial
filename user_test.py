@@ -89,7 +89,7 @@ class UserHandlerTest(testutil.HandlerTest):
        },
       vars)
 
-  def test_twitter_profile_image_urlfetch_fails(self):
+  def test_twitter_profile_image_urlopen_fails(self):
     url = 'http://api.twitter.com/1.1/users/show.json?screen_name=ryan'
     urllib2.urlopen(mox.Func(lambda req: req.get_full_url() == url),
                     timeout=999).AndRaise(urllib2.URLError(''))
