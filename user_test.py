@@ -8,14 +8,14 @@ try:
   import json
 except ImportError:
   import simplejson as json
+import mox
+import urllib2
 from webob import exc
 
 import appengine_config
 import user
 from webutil import testutil
 from webutil import webapp2
-
-from google.appengine.api import urlfetch
 
 
 class UserHandlerTest(testutil.HandlerTest):
@@ -64,10 +64,8 @@ class UserHandlerTest(testutil.HandlerTest):
 
 
   def test_twitter(self):
-    redirect = self.UrlfetchResult(302, '', headers={'Location': 'http://my/image'})
-    urlfetch.fetch('http://api.twitter.com/1.1/users/profile_image?screen_name=ryan',
-                   deadline=30, follow_redirects=False)\
-                   .AndReturn(redirect)
+    self.expect_urlopen('http://api.twitter.com/1.1/users/show.json?screen_name=ryan',
+                        json.dumps({'profile_image_url': 'http://pic/ture'}))
     self.mox.ReplayAll()
 
     appengine_config.APP_ID = 'twitter-webfinger'
@@ -86,15 +84,15 @@ class UserHandlerTest(testutil.HandlerTest):
        'poco_url': 'https://twitter-poco.appspot.com/poco/',
        'activitystreams_url': 'https://twitter-activitystreams.appspot.com/',
        'uri': 'acct:ryan@twitter.com',
-       'picture_url': 'http://my/image',
+       'picture_url': 'http://pic/ture',
        'magic_public_key': 'RSA.%s.%s' % (ryan.mod, ryan.public_exponent),
        },
       vars)
 
   def test_twitter_profile_image_urlfetch_fails(self):
-    urlfetch.fetch('http://api.twitter.com/1.1/users/profile_image?screen_name=ryan',
-                   deadline=30, follow_redirects=False)\
-                   .AndRaise(urlfetch.Error())
+    url = 'http://api.twitter.com/1.1/users/show.json?screen_name=ryan'
+    urllib2.urlopen(mox.Func(lambda req: req.get_full_url() == url),
+                    timeout=999).AndRaise(urllib2.URLError(''))
     self.mox.ReplayAll()
 
     appengine_config.APP_ID = 'twitter-webfinger'

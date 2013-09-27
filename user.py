@@ -11,11 +11,13 @@ try:
   import json
 except ImportError:
   import simplejson as json
+import urllib2
 
 import appengine_config
 
 import logging
 import os
+import urllib
 import urlparse
 from webob import exc
 from webutil import handlers
@@ -23,9 +25,12 @@ from webutil import util
 from webutil import webapp2
 
 from django_salmon import magicsigs
-from google.appengine.api import urlfetch
 from google.appengine.ext import db
 from google.appengine.ext.webapp.util import run_wsgi_app
+import tweepy
+
+TWITTER_ACCESS_TOKEN_KEY = appengine_config.read('twitter_access_token_key')
+TWITTER_ACCESS_TOKEN_SECRET = appengine_config.read('twitter_access_token_secret')
 
 
 class User(db.Model):
@@ -135,13 +140,20 @@ class UserHandler(BaseHandler):
       # shouldn't do that. :/ ah well.
       # https://dev.twitter.com/docs/api/1/get/users/profile_image/%3Ascreen_name
       try:
-        url = ('http://api.twitter.com/1.1/users/profile_image?screen_name=%s' %
-               username)
-        resp = urlfetch.fetch(url, follow_redirects=False, deadline=30)
-        location = resp.headers.get('Location')
-        if resp.status_code == 302 and location:
-            vars['picture_url'] = location
-      except urlfetch.Error, e:
+        url = 'http://api.twitter.com/1.1/users/show.json'
+        params = {'screen_name': username}
+        auth = tweepy.OAuthHandler(appengine_config.TWITTER_APP_KEY,
+                                   appengine_config.TWITTER_APP_SECRET)
+        auth.set_access_token(TWITTER_ACCESS_TOKEN_KEY,
+                              TWITTER_ACCESS_TOKEN_SECRET)
+        headers = {}
+        auth.apply_auth(url, 'GET', headers, params)
+        logging.info('Populated Authorization header from access token: %s',
+                     headers.get('Authorization'))
+
+        resp = json.loads(util.urlread(url + '?' + urllib.urlencode(params)))
+        vars['picture_url'] = resp.get('profile_image_url')
+      except urllib2.URLError:
         logging.exception('Error while fetching %s' % url)
 
       return vars
