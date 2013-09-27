@@ -140,20 +140,23 @@ class UserHandler(BaseHandler):
       # shouldn't do that. :/ ah well.
       # https://dev.twitter.com/docs/api/1/get/users/profile_image/%3Ascreen_name
       try:
-        url = 'http://api.twitter.com/1.1/users/show.json'
+        url = 'https://api.twitter.com/1.1/users/show.json'
         params = {'screen_name': username}
         auth = tweepy.OAuthHandler(appengine_config.TWITTER_APP_KEY,
                                    appengine_config.TWITTER_APP_SECRET)
-        auth.set_access_token(TWITTER_ACCESS_TOKEN_KEY,
-                              TWITTER_ACCESS_TOKEN_SECRET)
+        # make sure token key and secret aren't unicode because python's hmac
+        # module (used by tweepy/oauth.py) expects strings.
+        # http://stackoverflow.com/questions/11396789
+        auth.set_access_token(str(TWITTER_ACCESS_TOKEN_KEY),
+                              str(TWITTER_ACCESS_TOKEN_SECRET))
         headers = {}
         auth.apply_auth(url, 'GET', headers, params)
         logging.info('Populated Authorization header from access token: %s',
                      headers.get('Authorization'))
-
-        resp = json.loads(util.urlread(url + '?' + urllib.urlencode(params)))
+        resp = json.loads(util.urlread(url + '?' + urllib.urlencode(params),
+                                       headers=headers))
         vars['picture_url'] = resp.get('profile_image_url')
-      except urllib2.URLError:
+      except:
         logging.exception('Error while fetching %s' % url)
 
       return vars
