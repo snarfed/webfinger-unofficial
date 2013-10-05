@@ -7,10 +7,7 @@ http://salmon-protocol.googlecode.com/svn/trunk/draft-panzer-magicsig-01.html
 
 __author__ = 'Ryan Barrett <webfinger-unofficial@ryanb.org>'
 
-try:
-  import json
-except ImportError:
-  import simplejson as json
+import json
 import urllib2
 
 import appengine_config
@@ -22,12 +19,12 @@ import urlparse
 from webob import exc
 from webutil import handlers
 from webutil import util
-from webutil import webapp2
 
 from django_salmon import magicsigs
 from google.appengine.ext import db
 from google.appengine.ext.webapp.util import run_wsgi_app
 import tweepy
+import webapp2
 
 TWITTER_ACCESS_TOKEN_KEY = appengine_config.read('twitter_access_token_key')
 TWITTER_ACCESS_TOKEN_SECRET = appengine_config.read('twitter_access_token_secret')
@@ -153,8 +150,9 @@ class UserHandler(BaseHandler):
         auth.apply_auth(url, 'GET', headers, params)
         logging.info('Populated Authorization header from access token: %s',
                      headers.get('Authorization'))
-        resp = json.loads(util.urlread(url + '?' + urllib.urlencode(params),
-                                       headers=headers))
+        req = urllib2.Request(url + '?' + urllib.urlencode(params),
+                              headers=headers)
+        resp = json.loads(urllib2.urlopen(req).read())
         vars['picture_url'] = resp.get('profile_image_url')
       except:
         logging.exception('Error while fetching %s' % url)
