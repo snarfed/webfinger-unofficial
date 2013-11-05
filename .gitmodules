@@ -7,3 +7,6 @@
 [submodule "python-dateutil"]
 	path = python-dateutil
 	url = git://github.com/paxan/python-dateutil.git
+[submodule "tweepy_submodule"]
+	path = tweepy_submodule
+	url = git://github.com/tweepy/tweepy.git
